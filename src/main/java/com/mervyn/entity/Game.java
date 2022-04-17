@@ -54,7 +54,7 @@ public class Game {
         stringBuilder.append("\nMines: "+ mines);
         if (questionMark == 0) stringBuilder.append("\nMarks: Off");
         else stringBuilder.append("\nMarks: On");
-        stringBuilder.append("\nTime: "+ String.format("%d.%3d", score / 1000, score % 1000));
+        stringBuilder.append("\nTime: "+ String.format("%d.%03d", score / 1000, score % 1000));
         stringBuilder.append("\nGameStatus: "+ StatusEnum.getLabelByCode(status));
         stringBuilder.append("\nBBBV: "+ bbbv);
         stringBuilder.append("\nBBBVS: "+ bbbvs);
