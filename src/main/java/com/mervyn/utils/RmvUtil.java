@@ -2,6 +2,7 @@ package com.mervyn.utils;
 
 import com.mervyn.entity.Event;
 import com.mervyn.entity.Game;
+import com.mervyn.enums.CellTypeEnum;
 import com.mervyn.enums.EventEnum;
 import com.mervyn.enums.EventTypeEnum;
 
@@ -49,6 +50,7 @@ public class RmvUtil {
         Integer noFlagging;
         Integer status;
         String playerName;
+        Integer completedBv = 0;
         int[] board;
         List<Event> eventList = new ArrayList<>();
         boolean isFirstEvent = true;
@@ -119,32 +121,16 @@ public class RmvUtil {
         width=getInt(1,buffer); 		//Next byte is w so 8, 9 or 1E
         height=getInt(1,buffer); 		//Next byte is h so 8, 9 or 10
         mines=getInt(2,buffer); 	//Next two bytes are number of mines
-        /*
-        *
-        *
-        for _ in range(self.num_mines):
-            col = ord(data.read(1))
-            row = ord(data.read(1))
-            self.mines.append((row, col))
-        */
+
+        //board, get mines' position
         board = new int[width*height];
         for (int i = 0; i < mines; ++i) {
             int col = getInt(1, buffer);
             int row = getInt(1, buffer);
-            board[row*width+col] = 1;
+            board[row*width+col] = 9;
         }
-
-        /*
-        *
-        # preflagged
-        self.preflags = []
-        if preflagged_size:
-            num_preflags = self.read_int(data.read(2))
-            for _ in range(num_preflags):
-                col = ord(data.read(1))
-                row = ord(data.read(1))
-                self.preflags.append((row, col))
-        * */
+        BoardUtil.getBoardMap(board, width);
+        BoardUtil.printBoard(board, width);
 
         //Check number of flags placed before game started
         if (preflagged_size > 0) {
@@ -170,6 +156,10 @@ public class RmvUtil {
             getInt(1, buffer);
         }
 
+        //used to show completedBv time
+        int newestTime = 0;
+        //used to flag completed cell
+        int[] flag = new int[width*height];
         while (true) {
             int eventCode = getInt(1, buffer);
             if (eventCode == 0) {
@@ -178,6 +168,7 @@ public class RmvUtil {
             } else if(1 <= eventCode && eventCode <= 7) {
                 //Get mouse event (3 bytes time, 1 wasted, 2 width, 2 height)
                 int time = getInt(3,buffer);
+                newestTime = time;
                 getInt(1,buffer);
                 int x = getInt(2,buffer)-12;
                 int y = getInt(2,buffer)-56;
@@ -204,6 +195,14 @@ public class RmvUtil {
                 int y = getInt(1,buffer);
                 Event event = new Event(null, EventTypeEnum.BOARD.getCode(), eventCode, x, y);
                 eventList.add(event);
+
+                //calc completedBv
+                if (EventEnum.OPEN_0.getCode() <= eventCode && eventCode <= EventEnum.OPEN_8.getCode()) {
+                    int openBbbv = BoardUtil.openCell(board, flag, x, y, width);
+//                    BoardUtil.printBoard(flag, width);
+                    completedBv += openBbbv;
+//                    System.out.println(newestTime/1000 + "." + subStringFromEnd("00"+newestTime%1000, 3) + " completedBv : " + completedBv);
+                }
             } else if (eventCode<=17) {
                 //Get game status (ie, 'won')
                 status = eventCode;
@@ -216,7 +215,7 @@ public class RmvUtil {
         }
         score = getInt(3, buffer);
         bbbvs = (((bbbv*1000000)/(score))*1.0)/1000;
-        return new Game(version, gameTime, width, height, mines, questionMark, level, mode, bbbv, score, bbbvs, noFlagging, status, playerName, board, eventList);
+        return new Game(version, gameTime, width, height, mines, questionMark, level, mode, bbbv, completedBv, score, bbbvs, noFlagging, status, playerName, board, eventList);
     }
 
     public static int getIntBase(byte[] buffer) {
@@ -235,5 +234,8 @@ public class RmvUtil {
             res += getIntBase(buffer);
         }
         return res;
+    }
+    public static String subStringFromEnd(String str, int len) {
+        return str.substring(str.length()-len);
     }
 }

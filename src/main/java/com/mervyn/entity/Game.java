@@ -33,6 +33,7 @@ public class Game {
     private Integer level;
     private Integer mode;
     private Integer bbbv;
+    private Integer completedBbbv;
     private Integer score;
     private Double bbbvs;
     private Integer noFlagging;
@@ -40,7 +41,7 @@ public class Game {
 
     private String playerName;
 
-    private int[] board;
+    private int[] board;        //0ops, 1-8nums, 9mines
     private List<Event> eventList;
 
     @Override
@@ -57,6 +58,7 @@ public class Game {
         stringBuilder.append("\nTime: "+ String.format("%d.%03d", score / 1000, score % 1000));
         stringBuilder.append("\nGameStatus: "+ StatusEnum.getLabelByCode(status));
         stringBuilder.append("\nBBBV: "+ bbbv);
+        stringBuilder.append("\nCompletedBbbv: "+ completedBbbv);
         stringBuilder.append("\nBBBVS: "+ bbbvs);
         stringBuilder.append("\nTimestamp: "+ gameTime);
         stringBuilder.append("\nFormatTime: "+ CommonUtil.formatTime(gameTime));
